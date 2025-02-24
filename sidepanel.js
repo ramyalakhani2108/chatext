@@ -52,7 +52,7 @@ function initializeChat() {
     });
 
     socket.on('chatMessage', (msgData) => {
-        console.log('Received:', msgData.message);
+    
         const messages = document.getElementById('messages');
         const messageElement = document.createElement('div');
         messageElement.className = msgData.socketId === socket.id ? 'sent' : 'received';
@@ -160,7 +160,6 @@ function sendMessage() {
     const input = document.getElementById('message-input');
     const message = input.value.trim();
     if (message) {
-        console.log('Sending:', message);
         socket.emit('chatMessage', { 
             message: message, 
             socketId: socket.id, 
