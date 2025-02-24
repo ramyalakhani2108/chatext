@@ -5,7 +5,7 @@ const socket = io('https://chatext.onrender.com', {
     reconnectionDelay: 2000
 });
 let userName = '';
-const TENOR_API_KEY = 'YOUR_TENOR_API_KEY'; // Replace with your actual Tenor API key
+const TENOR_API_KEY = 'AIzaSyDoyEqCXWo1FXr66X2kmnCmid1_QHZaTUg'; // Replace with your actual Tenor API key
 const emojiList = [
     '😊', '😂', '❤️', '👍', '😢', '😍', '😘', '😜', '😎', '😭',
     '🙌', '👏', '🔥', '💪', '✨', '💕', '💖', '💔', '💯', '🎉',
