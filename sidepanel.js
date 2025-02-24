@@ -19,7 +19,6 @@ const emojiList = [
 chrome.storage.local.get(['chatUserName'], (result) => {
     if (result.chatUserName) {
         userName = result.chatUserName;
-        console.log('Loaded username from storage:', userName);
         initializeChat();
     } else {
         promptForName();
@@ -31,10 +30,8 @@ function promptForName() {
     if (name && name.trim()) {
         userName = name.trim();
         chrome.storage.local.set({ chatUserName: userName }, () => {
-            console.log('Set username:', userName);
             initializeChat();
             socket.emit('userJoined', userName);
-            console.log('Emitted userJoined with:', userName);
         });
     } else {
         alert('A valid name is required!');
@@ -68,19 +65,14 @@ function initializeChat() {
     const gifResults = document.getElementById('gif-results');
 
     socket.on('connect', () => {
-        console.log(userName);
-        console.log('Connected to server with socket ID:', socket.id);
         socket.emit('userJoined', userName);
-        console.log('Emitted userJoined on connect:', userName);
     });
 
     socket.on('connect_error', (error) => {
         console.error('Connection error:', error.message);
     });
-    console.log('hello');
 
     socket.on('updateUsers', (userList) => {
-        console.log('Received updateUsers:', userList);
         onlineCount.textContent = userList.length;
         userListContainer.innerHTML = '';
         if (userList.length === 0) {

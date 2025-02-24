@@ -14,14 +14,11 @@ const io = new Server(server, {
 const users = {}; // { socketId: username }
 
 io.on("connection", (socket) => {
-    console.log("A user connected:", socket.id);
 
     socket.on("userJoined", (name) => {
         if (name && typeof name === 'string' && name.trim()) {
             users[socket.id] = name.trim();
-            console.log('User joined:', name, 'Socket ID:', socket.id);
             io.emit("updateUsers", Object.values(users));
-            console.log('Emitted updateUsers:', Object.values(users));
         } else {
             console.log('Invalid name received:', name);
         }
@@ -29,7 +26,6 @@ io.on("connection", (socket) => {
 
     socket.on("chatMessage", (msgData) => {
         if (msgData && msgData.message && users[socket.id]) {
-            console.log('Chat message from:', users[socket.id], 'Message:', msgData.message);
             io.emit("chatMessage", {
                 message: msgData.message,
                 socketId: socket.id,
@@ -41,9 +37,7 @@ io.on("connection", (socket) => {
     socket.on("disconnect", () => {
         const name = users[socket.id];
         delete users[socket.id];
-        console.log('User disconnected:', name, 'Socket ID:', socket.id);
         io.emit("updateUsers", Object.values(users));
-        console.log('Emitted updateUsers after disconnect:', Object.values(users));
     });
 });
 
