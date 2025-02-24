@@ -1,4 +1,9 @@
-const socket = io('http://localhost:3001', { transports: ['websocket'] });
+const socket = io('https://chatext.onrender.com', { 
+    transports: ['websocket'],
+    reconnection: true, // Auto-reconnect on disconnection
+    reconnectionAttempts: 5, // Retry 5 times before failing
+    reconnectionDelay: 2000 // Wait 2s between attempts
+});
 let userName = '';
 const TENOR_API_KEY = 'AIzaSyDoyEqCXWo1FXr66X2kmnCmid1_QHZaTUg'; // Replace with your key
 const emojiList = [
