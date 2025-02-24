@@ -8,23 +8,42 @@ const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 
 const io = new Server(server, {
-    cors: { origin: '*' }
+    cors: { origin: '*' } // Adjust for production security
 });
 
-io.on('connection', (socket) => {
-    console.log('A user connected');
+const users = {}; // { socketId: username }
 
-    socket.on('chatMessage', (msgData) => {
-        console.log('Server received:', `${msgData.name}: ${msgData.message}`); 
-        io.emit('chatMessage', { 
-            message: msgData.message, 
-            socketId: socket.id, 
-            name: msgData.name 
-        });
+io.on("connection", (socket) => {
+    console.log("A user connected:", socket.id);
+
+    socket.on("userJoined", (name) => {
+        if (name && typeof name === 'string' && name.trim()) {
+            users[socket.id] = name.trim();
+            console.log('User joined:', name, 'Socket ID:', socket.id);
+            io.emit("updateUsers", Object.values(users));
+            console.log('Emitted updateUsers:', Object.values(users));
+        } else {
+            console.log('Invalid name received:', name);
+        }
     });
 
-    socket.on('disconnect', () => {
-        console.log('User disconnected');
+    socket.on("chatMessage", (msgData) => {
+        if (msgData && msgData.message && users[socket.id]) {
+            console.log('Chat message from:', users[socket.id], 'Message:', msgData.message);
+            io.emit("chatMessage", {
+                message: msgData.message,
+                socketId: socket.id,
+                name: users[socket.id]
+            });
+        }
+    });
+
+    socket.on("disconnect", () => {
+        const name = users[socket.id];
+        delete users[socket.id];
+        console.log('User disconnected:', name, 'Socket ID:', socket.id);
+        io.emit("updateUsers", Object.values(users));
+        console.log('Emitted updateUsers after disconnect:', Object.values(users));
     });
 });
 

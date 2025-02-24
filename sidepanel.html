@@ -7,7 +7,15 @@
 </head>
 <body>
     <div id="chat-container">
-        <div id="chat-header">Chat</div>
+        <div id="chat-header">
+            Chat
+            <div id="users-container">
+                <button id="online-users-btn">👥 <span id="online-count">0</span></button>
+                <ul id="online-users-dropdown" class="dropdown">
+                    <li id="user-list"></li>
+                </ul>
+            </div>
+        </div>
         <div id="messages"></div>
         <div id="input-container">
             <button id="emoji-button">😊</button>

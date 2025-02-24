@@ -1,11 +1,11 @@
 const socket = io('https://chatext.onrender.com', { 
     transports: ['websocket'],
-    reconnection: true, // Auto-reconnect on disconnection
-    reconnectionAttempts: 5, // Retry 5 times before failing
-    reconnectionDelay: 2000 // Wait 2s between attempts
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 2000
 });
 let userName = '';
-const TENOR_API_KEY = 'AIzaSyDoyEqCXWo1FXr66X2kmnCmid1_QHZaTUg'; // Replace with your key
+const TENOR_API_KEY = 'YOUR_TENOR_API_KEY'; // Replace with your actual Tenor API key
 const emojiList = [
     '😊', '😂', '❤️', '👍', '😢', '😍', '😘', '😜', '😎', '😭',
     '🙌', '👏', '🔥', '💪', '✨', '💕', '💖', '💔', '💯', '🎉',
@@ -14,12 +14,12 @@ const emojiList = [
     '🐶', '🐻', '🐼', '🐰', '🦁', '🐸', '🐵', '🐴', '🐦', '🌟',
     '☀️', '🌈', '☁️', '❄️', '🌊', '🌺', '🌸', '🍁', '🍀', '⚽',
     '🏀', '🎸', '🎤', '🎬', '📸', '✈️', '🚀', '🚗', '⏰', '💻'
-    // Add more here or fetch from a larger source
 ];
 
 chrome.storage.local.get(['chatUserName'], (result) => {
     if (result.chatUserName) {
         userName = result.chatUserName;
+        console.log('Loaded username from storage:', userName);
         initializeChat();
     } else {
         promptForName();
@@ -31,7 +31,10 @@ function promptForName() {
     if (name && name.trim()) {
         userName = name.trim();
         chrome.storage.local.set({ chatUserName: userName }, () => {
+            console.log('Set username:', userName);
             initializeChat();
+            socket.emit('userJoined', userName);
+            console.log('Emitted userJoined with:', userName);
         });
     } else {
         alert('A valid name is required!');
@@ -41,18 +44,59 @@ function promptForName() {
 
 async function fetchGifs(query = 'funny') {
     const url = `https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(query)}&key=${TENOR_API_KEY}&limit=12`;
-    const response = await fetch(url);
-    const data = await response.json();
-    return data.results.map(result => result.media_formats.gif.url);
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.results.map(result => result.media_formats.gif.url);
+    } catch (error) {
+        console.error('Failed to fetch GIFs:', error);
+        return [];
+    }
 }
 
 function initializeChat() {
+    const onlineUsersBtn = document.getElementById('online-users-btn');
+    const onlineUsersDropdown = document.getElementById('online-users-dropdown');
+    const onlineCount = document.getElementById('online-count');
+    const userListContainer = document.getElementById('user-list');
+    const input = document.getElementById('message-input');
+    const emojiButton = document.getElementById('emoji-button');
+    const gifButton = document.getElementById('gif-button');
+    const emojiPicker = document.getElementById('emoji-picker');
+    const gifPicker = document.getElementById('gif-picker');
+    const gifSearch = document.getElementById('gif-search');
+    const gifResults = document.getElementById('gif-results');
+
     socket.on('connect', () => {
-        console.log('Connected to server');
+        console.log(userName);
+        console.log('Connected to server with socket ID:', socket.id);
+        socket.emit('userJoined', userName);
+        console.log('Emitted userJoined on connect:', userName);
+    });
+
+    socket.on('connect_error', (error) => {
+        console.error('Connection error:', error.message);
+    });
+    console.log('hello');
+
+    socket.on('updateUsers', (userList) => {
+        console.log('Received updateUsers:', userList);
+        onlineCount.textContent = userList.length;
+        userListContainer.innerHTML = '';
+        if (userList.length === 0) {
+            const noUsers = document.createElement('li');
+            noUsers.textContent = 'No users online';
+            userListContainer.appendChild(noUsers);
+        } else {
+            userList.forEach(user => {
+                const userItem = document.createElement('li');
+                userItem.textContent = user;
+                userListContainer.appendChild(userItem);
+            });
+        }
     });
 
     socket.on('chatMessage', (msgData) => {
-    
         const messages = document.getElementById('messages');
         const messageElement = document.createElement('div');
         messageElement.className = msgData.socketId === socket.id ? 'sent' : 'received';
@@ -83,15 +127,16 @@ function initializeChat() {
         messages.scrollTop = messages.scrollHeight;
     });
 
-    const input = document.getElementById('message-input');
-    const emojiButton = document.getElementById('emoji-button');
-    const gifButton = document.getElementById('gif-button');
-    const emojiPicker = document.getElementById('emoji-picker');
-    const gifPicker = document.getElementById('gif-picker');
-    const gifSearch = document.getElementById('gif-search');
-    const gifResults = document.getElementById('gif-results');
+    onlineUsersBtn.addEventListener('click', () => {
+        onlineUsersDropdown.classList.toggle('show');
+    });
 
-    // Populate emoji picker
+    window.addEventListener('click', (event) => {
+        if (!onlineUsersBtn.contains(event.target) && !onlineUsersDropdown.contains(event.target)) {
+            onlineUsersDropdown.classList.remove('show');
+        }
+    });
+
     emojiList.forEach(emoji => {
         const emojiSpan = document.createElement('span');
         emojiSpan.className = 'emoji';
