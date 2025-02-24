@@ -5,6 +5,8 @@ const socket = io('https://chatext.onrender.com', {
     reconnectionDelay: 2000
 });
 let userName = '';
+let unreadCount = 0;
+let replyingTo = null;
 const TENOR_API_KEY = 'AIzaSyDoyEqCXWo1FXr66X2kmnCmid1_QHZaTUg'; // Replace with your actual Tenor API key
 const emojiList = [
     '😊', '😂', '❤️', '👍', '😢', '😍', '😘', '😜', '😎', '😭',
@@ -19,7 +21,6 @@ const emojiList = [
 chrome.storage.local.get(['chatUserName'], (result) => {
     if (result.chatUserName) {
         userName = result.chatUserName;
-        console.log('Loaded username from storage:', userName);
         initializeChat();
     } else {
         promptForName();
@@ -31,10 +32,8 @@ function promptForName() {
     if (name && name.trim()) {
         userName = name.trim();
         chrome.storage.local.set({ chatUserName: userName }, () => {
-            console.log('Set username:', userName);
             initializeChat();
             socket.emit('userJoined', userName);
-            console.log('Emitted userJoined with:', userName);
         });
     } else {
         alert('A valid name is required!');
@@ -66,11 +65,14 @@ function initializeChat() {
     const gifPicker = document.getElementById('gif-picker');
     const gifSearch = document.getElementById('gif-search');
     const gifResults = document.getElementById('gif-results');
+    const contextMenu = document.getElementById('context-menu');
+    const replyOption = document.getElementById('reply-option');
+
+    unreadCount = 0;
+    updateBadge();
 
     socket.on('connect', () => {
-        console.log('Connected to server with socket ID:', socket.id);
         socket.emit('userJoined', userName);
-        console.log('Emitted userJoined on connect:', userName);
     });
 
     socket.on('connect_error', (error) => {
@@ -78,7 +80,6 @@ function initializeChat() {
     });
 
     socket.on('updateUsers', (userList) => {
-        console.log('Received updateUsers:', userList);
         onlineCount.textContent = userList.length;
         userListContainer.innerHTML = '';
         if (userList.length === 0) {
@@ -92,24 +93,29 @@ function initializeChat() {
                 userListContainer.appendChild(userItem);
             });
         }
-
-        // Send the online user count to the background script for badge update
-        chrome.runtime.sendMessage({
-            type: 'updateBadge',
-            count: userList.length
-        }, (response) => {
-            if (chrome.runtime.lastError) {
-                console.error('Error sending message:', chrome.runtime.lastError);
-            } else {
-                console.log('Badge update message sent successfully');
-            }
-        });
     });
 
     socket.on('chatMessage', (msgData) => {
         const messages = document.getElementById('messages');
         const messageElement = document.createElement('div');
         messageElement.className = msgData.socketId === socket.id ? 'sent' : 'received';
+        messageElement.dataset.socketId = msgData.socketId;
+        messageElement.dataset.name = msgData.name;
+        messageElement.dataset.message = msgData.message;
+
+        if (msgData.replyTo) {
+            const quoteDiv = document.createElement('div');
+            quoteDiv.className = 'quote';
+            const quoteName = document.createElement('span');
+            quoteName.className = 'quote-name';
+            quoteName.textContent = msgData.replyTo.name;
+            const quoteText = document.createElement('span');
+            quoteText.className = 'quote-text';
+            quoteText.textContent = msgData.replyTo.message;
+            quoteDiv.appendChild(quoteName);
+            quoteDiv.appendChild(quoteText);
+            messageElement.appendChild(quoteDiv);
+        }
 
         const nameSpan = document.createElement('span');
         nameSpan.style.fontWeight = 'bold';
@@ -135,6 +141,40 @@ function initializeChat() {
 
         messages.appendChild(messageElement);
         messages.scrollTop = messages.scrollHeight;
+
+        if (msgData.socketId !== socket.id) {
+            unreadCount++;
+            updateBadge();
+        }
+    });
+
+    document.getElementById('messages').addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        const messageElement = e.target.closest('div.sent, div.received');
+        if (messageElement) {
+            replyingTo = {
+                socketId: messageElement.dataset.socketId,
+                name: messageElement.dataset.name,
+                message: messageElement.dataset.message
+            };
+            contextMenu.style.display = 'block';
+            contextMenu.style.left = `${e.pageX}px`;
+            contextMenu.style.top = `${e.pageY}px`;
+        }
+    });
+
+    replyOption.addEventListener('click', () => {
+        if (replyingTo) {
+            input.value = `Replying to ${replyingTo.name}: "${replyingTo.message}"\n`;
+            input.focus();
+            contextMenu.style.display = 'none';
+        }
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!contextMenu.contains(e.target)) {
+            contextMenu.style.display = 'none';
+        }
     });
 
     onlineUsersBtn.addEventListener('click', () => {
@@ -194,9 +234,11 @@ function initializeChat() {
                 socket.emit('chatMessage', { 
                     message: gifUrl, 
                     socketId: socket.id, 
-                    name: userName 
+                    name: userName,
+                    replyTo: replyingTo
                 });
                 gifPicker.style.display = 'none';
+                replyingTo = null;
             });
             gifResults.appendChild(img);
         });
@@ -213,13 +255,34 @@ function initializeChat() {
 
 function sendMessage() {
     const input = document.getElementById('message-input');
-    const message = input.value.trim();
+    let message = input.value.trim();
     if (message) {
+        // Extract the actual reply text after the quote if replying
+        if (replyingTo) {
+            const replyPrefix = `Replying to ${replyingTo.name}: "${replyingTo.message}"\n`;
+            if (message.startsWith(replyPrefix)) {
+                message = message.substring(replyPrefix.length).trim();
+            }
+        }
         socket.emit('chatMessage', { 
             message: message, 
             socketId: socket.id, 
-            name: userName 
+            name: userName,
+            replyTo: replyingTo
         });
         input.value = '';
+        replyingTo = null;
     }
+}
+
+function updateBadge() {
+    chrome.runtime.sendMessage({
+        type: 'updateBadge',
+        count: unreadCount
+    }, (response) => {
+        if (chrome.runtime.lastError) {
+            console.error('Error sending badge update:', chrome.runtime.lastError);
+        } else {
+        }
+    });
 }

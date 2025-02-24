@@ -113,6 +113,29 @@ body {
     box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
 }
 
+/* WhatsApp-style quoted message */
+.quote {
+    background-color: #f0f0f0;
+    padding: 6px 8px;
+    margin-bottom: 6px;
+    border-left: 4px solid #00af9c;
+    border-radius: 3px;
+    font-size: 12px;
+    color: #333;
+}
+
+.quote .quote-name {
+    font-weight: bold;
+    color: #00af9c;
+    margin-bottom: 2px;
+}
+
+.quote .quote-text {
+    display: block;
+    color: #666;
+    word-wrap: break-word;
+}
+
 #messages div .timestamp {
     font-size: 10px;
     color: #666;
@@ -218,6 +241,27 @@ body {
     height: 80px;
     cursor: pointer;
     border-radius: 3px;
+}
+
+.context-menu {
+    position: absolute;
+    background-color: #fff;
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 20;
+    padding: 5px 0;
+}
+
+#reply-option {
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #202124;
+}
+
+#reply-option:hover {
+    background-color: #f1f3f4;
 }
 
 @keyframes fadeIn {

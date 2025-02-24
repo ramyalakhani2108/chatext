@@ -8,10 +8,10 @@ const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
 
 const io = new Server(server, {
-    cors: { origin: '*' } // Adjust for production security
+    cors: { origin: '*' }
 });
 
-const users = {}; // { socketId: username }
+const users = {};
 
 io.on("connection", (socket) => {
 
@@ -20,7 +20,6 @@ io.on("connection", (socket) => {
             users[socket.id] = name.trim();
             io.emit("updateUsers", Object.values(users));
         } else {
-            console.log('Invalid name received:', name);
         }
     });
 
@@ -29,7 +28,8 @@ io.on("connection", (socket) => {
             io.emit("chatMessage", {
                 message: msgData.message,
                 socketId: socket.id,
-                name: users[socket.id]
+                name: users[socket.id],
+                replyTo: msgData.replyTo // Pass reply context if present
             });
         }
     });
