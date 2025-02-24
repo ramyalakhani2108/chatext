@@ -22,7 +22,6 @@ const emojiList = [
 chrome.storage.local.get(['chatUserName'], (result) => {
     if (result.chatUserName) {
         userName = result.chatUserName;
-        console.log('Loaded username from storage:', userName);
         initializeChat();
     } else {
         promptForName();
@@ -34,10 +33,8 @@ function promptForName() {
     if (name && name.trim()) {
         userName = name.trim();
         chrome.storage.local.set({ chatUserName: userName }, () => {
-            console.log('Set username:', userName);
             initializeChat();
             socket.emit('userJoined', userName);
-            console.log('Emitted userJoined with:', userName);
         });
     } else {
         alert('A valid name is required!');
@@ -77,9 +74,7 @@ function initializeChat() {
     updateBadge();
 
     socket.on('connect', () => {
-        console.log('Connected to server with socket ID:', socket.id);
         socket.emit('userJoined', userName);
-        console.log('Emitted userJoined on connect:', userName);
     });
 
     socket.on('connect_error', (error) => {
@@ -87,7 +82,6 @@ function initializeChat() {
     });
 
     socket.on('updateUsers', (userList) => {
-        console.log('Received updateUsers:', userList);
         onlineCount.textContent = userList.length;
         userListContainer.innerHTML = '';
         if (userList.length === 0) {
@@ -152,19 +146,16 @@ function initializeChat() {
 
         if (msgData.socketId !== socket.id) {
             unreadCount++;
-            console.log('New message received, unread count:', unreadCount);
             updateBadge();
         }
     });
 
     socket.on('typing', (data) => {
         typingIndicator.textContent = `${data.name} is typing...`;
-        console.log(`${data.name} is typing...`);
     });
 
     socket.on('stopTyping', (data) => {
         typingIndicator.textContent = '';
-        console.log(`${data.name} stopped typing`);
     });
 
     document.getElementById('messages').addEventListener('contextmenu', (e) => {
