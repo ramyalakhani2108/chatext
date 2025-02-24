@@ -1,0 +1,246 @@
+body {
+    width: 100%;
+    font-family: "Helvetica Neue", Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+        margin: 0;
+    padding: 0;
+    background-color: #f0f0f0; /* Light gray for outer container */
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Header styling */
+#chat-header {
+    background-color: #00af9c; /* WhatsApp teal */
+    color: white;
+    padding: 10px;
+    font-size: 16px;
+    font-weight: 500;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Chat container */
+#chat-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: #efeae2; /* WhatsApp chat background */
+    background-image: url('https://whatsappbrand.com/wp-content/themes/whatsapp-brandsite/img/bg-chat-tile-light.png');
+}
+
+/* Messages area */
+#messages {
+    font-family: inherit;
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* Space between messages */
+}
+
+/* Message bubble styling */
+#messages div {
+    position: relative;
+    max-width: 70%;
+    padding: 8px 12px;
+    border-radius: 7.5px;
+    font-size: 14px;
+    line-height: 1.4;
+    animation: fadeIn 0.2s ease-in;
+}
+
+/* Sent messages */
+#messages div.sent {
+    background-color: #dcf8c6; /* WhatsApp green */
+    align-self: flex-end;
+    margin-left: auto;
+}
+
+/* Received messages */
+#messages div.received {
+    background-color: #ffffff;
+    align-self: flex-start;
+    margin-right: auto;
+    box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
+}
+
+/* Timestamp styling */
+#messages div .timestamp {
+    font-size: 10px;
+    color: #666;
+    margin-top: 2px;
+    text-align: right;
+}
+
+/* Tail for message bubbles (WhatsApp’s curved tail effect) */
+#messages div.sent::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: -6px;
+    width: 10px;
+    height: 10px;
+    background: radial-gradient(circle at top left, transparent 70%, #dcf8c6 70%);
+}
+
+#messages div.received::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: -6px;
+    width: 10px;
+    height: 10px;
+    background: radial-gradient(circle at top right, transparent 70%, #ffffff 70%);
+}
+
+/* Input container */
+#input-container {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background-color: #f0f0f0;
+    border-top: 1px solid #d9d9d9;
+}
+
+/* Input field */
+#message-input {
+    padding: 10px 15px;
+    margin: 0 5px 0 0;
+    border: none;
+    border-radius: 20px;
+    background-color: #ffffff;
+    font-size: 14px;
+    outline: none;
+    flex: 1;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Send button */
+#send-button {
+    padding: 10px 15px;
+    margin: 0;
+    border: none;
+    border-radius: 20px;
+    background-color: #00af9c;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+#send-button:hover {
+    background-color: #009688;
+}
+
+/* Fade-in animation for new messages */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Scrollbar styling */
+#messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+#messages::-webkit-scrollbar-thumb {
+    background-color: #00af9c;
+    border-radius: 3px;
+}
+
+#messages::-webkit-scrollbar-track {
+    background-color: #efeae2;
+}
+
+/* Add this to existing #messages div styling */
+#messages div span:first-child {
+    color: #00af9c; /* Teal for names */
+}
+
+/* Add to existing CSS */
+#input-container {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background-color: #f0f0f0;
+    border-top: 1px solid #d9d9d9;
+    position: relative; /* For positioning the picker */
+}
+
+#emoji-button {
+    padding: 5px;
+    margin-right: 5px;
+    border: none;
+    background: none;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+#emoji-picker {
+    position: absolute;
+    bottom: 50px; /* Above input */
+    left: 10px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+}
+
+#emoji-picker .emoji {
+    font-size: 20px;
+    padding: 5px;
+    cursor: pointer;
+}
+
+#emoji-picker .emoji:hover {
+    background-color: #f0f0f0;
+}
+
+#gif-button {
+    padding: 5px;
+    margin-right: 5px;
+    border: none;
+    background: none;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+#gif-picker {
+    position: absolute;
+    bottom: 50px;
+    left: 10px;
+    width: 280px;
+    max-height: 300px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+    overflow-y: auto;
+}
+
+#gif-search {
+    width: 100%;
+    padding: 5px;
+    margin-bottom: 5px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    font-size: 14px;
+}
+
+#gif-results {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+#gif-results img {
+    width: 80px;
+    height: 80px;
+    cursor: pointer;
+    border-radius: 3px;
+}

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+    <div id="chat-container">
+        <div id="chat-header">Chat</div>
+        <div id="messages"></div>
+        <div id="input-container">
+            <button id="emoji-button">😊</button>
+            <button id="gif-button">GIF</button>
+            <input id="message-input" type="text" placeholder="Type a message...">
+            <button id="send-button">Send</button>
+        </div>
+        <div id="emoji-picker" style="display: none;"></div>
+        <div id="gif-picker" style="display: none;">
+            <input id="gif-search" type="text" placeholder="Search GIFs...">
+            <div id="gif-results"></div>
+        </div>
+    </div>
+    <script src="socket.io.min.js"></script>
+    <script src="emoji.min.js"></script>
+    <script src="sidepanel.js"></script>
+</body>
+</html>

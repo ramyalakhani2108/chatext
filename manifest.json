@@ -1,0 +1,21 @@
+{
+    "manifest_version": 3,
+    "name": "Chat Side Panel",
+    "version": "1.0",
+    "permissions": [
+        "sidePanel",
+        "activeTab",
+        "storage"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "action": {
+    },
+    "side_panel": {
+        "default_path": "sidepanel.html"
+    },
+    "host_permissions": [
+        "http://localhost:3000/*"
+    ]
+}
