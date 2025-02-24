@@ -184,7 +184,7 @@ function initializeChat() {
 
     replyOption.addEventListener('click', () => {
         if (replyingTo) {
-            input.value = `Replying to ${replyingTo.name}: "${replyingTo.message}"\n`;
+            input.value = ``;
             input.focus();
             contextMenu.style.display = 'none';
         }
@@ -291,7 +291,7 @@ function sendMessage() {
     let message = input.value.trim();
     if (message) {
         if (replyingTo) {
-            const replyPrefix = `Replying to ${replyingTo.name}: "${replyingTo.message}"\n`;
+            const replyPrefix = ``;
             if (message.startsWith(replyPrefix)) {
                 message = message.substring(replyPrefix.length).trim();
             }
