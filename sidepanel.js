@@ -7,6 +7,7 @@ const socket = io('https://chatext.onrender.com', {
 let userName = '';
 let unreadCount = 0;
 let replyingTo = null;
+let typingTimeout = null; // To debounce stopTyping
 const TENOR_API_KEY = 'AIzaSyDoyEqCXWo1FXr66X2kmnCmid1_QHZaTUg'; // Replace with your actual Tenor API key
 const emojiList = [
     '😊', '😂', '❤️', '👍', '😢', '😍', '😘', '😜', '😎', '😭',
@@ -21,6 +22,7 @@ const emojiList = [
 chrome.storage.local.get(['chatUserName'], (result) => {
     if (result.chatUserName) {
         userName = result.chatUserName;
+        console.log('Loaded username from storage:', userName);
         initializeChat();
     } else {
         promptForName();
@@ -32,8 +34,10 @@ function promptForName() {
     if (name && name.trim()) {
         userName = name.trim();
         chrome.storage.local.set({ chatUserName: userName }, () => {
+            console.log('Set username:', userName);
             initializeChat();
             socket.emit('userJoined', userName);
+            console.log('Emitted userJoined with:', userName);
         });
     } else {
         alert('A valid name is required!');
@@ -67,12 +71,15 @@ function initializeChat() {
     const gifResults = document.getElementById('gif-results');
     const contextMenu = document.getElementById('context-menu');
     const replyOption = document.getElementById('reply-option');
+    const typingIndicator = document.getElementById('typing-indicator');
 
     unreadCount = 0;
     updateBadge();
 
     socket.on('connect', () => {
+        console.log('Connected to server with socket ID:', socket.id);
         socket.emit('userJoined', userName);
+        console.log('Emitted userJoined on connect:', userName);
     });
 
     socket.on('connect_error', (error) => {
@@ -80,6 +87,7 @@ function initializeChat() {
     });
 
     socket.on('updateUsers', (userList) => {
+        console.log('Received updateUsers:', userList);
         onlineCount.textContent = userList.length;
         userListContainer.innerHTML = '';
         if (userList.length === 0) {
@@ -144,8 +152,19 @@ function initializeChat() {
 
         if (msgData.socketId !== socket.id) {
             unreadCount++;
+            console.log('New message received, unread count:', unreadCount);
             updateBadge();
         }
+    });
+
+    socket.on('typing', (data) => {
+        typingIndicator.textContent = `${data.name} is typing...`;
+        console.log(`${data.name} is typing...`);
+    });
+
+    socket.on('stopTyping', (data) => {
+        typingIndicator.textContent = '';
+        console.log(`${data.name} stopped typing`);
     });
 
     document.getElementById('messages').addEventListener('contextmenu', (e) => {
@@ -225,6 +244,19 @@ function initializeChat() {
         }
     });
 
+    input.addEventListener('input', () => {
+        socket.emit('typing');
+        clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => {
+            socket.emit('stopTyping');
+        }, 1000); // Stop typing after 1 second of inactivity
+    });
+
+    input.addEventListener('blur', () => {
+        socket.emit('stopTyping');
+        clearTimeout(typingTimeout);
+    });
+
     function displayGifs(gifs) {
         gifResults.innerHTML = '';
         gifs.forEach(gifUrl => {
@@ -239,6 +271,7 @@ function initializeChat() {
                 });
                 gifPicker.style.display = 'none';
                 replyingTo = null;
+                socket.emit('stopTyping'); // Stop typing when sending GIF
             });
             gifResults.appendChild(img);
         });
@@ -257,7 +290,6 @@ function sendMessage() {
     const input = document.getElementById('message-input');
     let message = input.value.trim();
     if (message) {
-        // Extract the actual reply text after the quote if replying
         if (replyingTo) {
             const replyPrefix = `Replying to ${replyingTo.name}: "${replyingTo.message}"\n`;
             if (message.startsWith(replyPrefix)) {
@@ -272,6 +304,7 @@ function sendMessage() {
         });
         input.value = '';
         replyingTo = null;
+        socket.emit('stopTyping'); // Stop typing when message is sent
     }
 }
 
@@ -283,6 +316,7 @@ function updateBadge() {
         if (chrome.runtime.lastError) {
             console.error('Error sending badge update:', chrome.runtime.lastError);
         } else {
+            console.log('Badge updated to:', unreadCount);
         }
     });
 }
